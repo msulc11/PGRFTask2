@@ -1,7 +1,7 @@
 package model;
 
 public class Edge {
-    private final int x1, y1, x2, y2;
+    private int x1, y1, x2, y2;
 
     public Edge(int x1, int y1, int x2, int y2) {
         this.x1 = x1;
@@ -21,16 +21,25 @@ public class Edge {
         return y1 == y2;
     }
 
+
     public void orientate() {
-        // TODO: zařídí, že hrana směřuje dolů/nahoru, podle vašeho výběru
-        // má vliv na podmínku u zjišťování průsečíku
+        if (y1 > y2) {
+            int tempX = x1;
+            x1 = x2;
+            x2 = tempX;
+
+            int tempY = y1;
+            y1 = y2;
+            y2 = tempY;
+        }
     }
 
+
     public boolean isIntersection(int y) {
-        // TODO: napsat podmínku, jestli existuje průsečík
-        // podmínka byla na tabuli a určitě je i v přednáškách
-        // tady probíhá zkrácení o "1 pixel"
-        return true;
+        if (y >= y1 && y<=y2 - 1){
+            return true;
+        }
+        else return false;
     }
 
     public int getIntersection(int y) {

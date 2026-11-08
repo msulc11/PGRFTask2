@@ -23,7 +23,7 @@ public class RasterBufferedImage implements Raster {
         if (!isInside(x, y)) return 0;
         return image.getRGB(x, y);
     }
-    
+
     private boolean isInside(int x, int y) {
         return x >= 0 && x < image.getWidth() && y >= 0 && y < image.getHeight();
     }
