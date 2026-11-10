@@ -3,15 +3,23 @@ package fill;
 import model.Edge;
 import model.Point2D;
 import model.Polygon;
+import raster.Raster;
+import rasterize.PolygonRasterizer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ScanLineFill implements Filler {
+    private final Raster raster;
+    private final PolygonRasterizer polygonRasterizer;
+
     private int fillColor;
     private Polygon polygon;
 
-    public ScanLineFill() {
+    public ScanLineFill(Raster raster, PolygonRasterizer polygonRasterizer) {
+        this.raster = raster;
+        this.polygonRasterizer = polygonRasterizer;
         setFillColor(0x00ff00);
     }
 
@@ -31,29 +39,35 @@ public class ScanLineFill implements Filler {
             }
         }
 
-        // TODO: Musíme najít min a max Y
         int yMin = polygon.getPoint(0).getY();
         int yMax = yMin;
-
-
-        for (int y = yMin; y <= yMax; y++) {
-            List<Integer> intersection = new ArrayList<>();
-
-            // TODO: pro danou scan line se ptáme, jestli existuje
-            // průsečík s hranou. S jakou???? Se všema!!!
-            for(Edge edge : edges) {
-                if(!edge.isIntersection(y)) continue;
-
-                // TODO: spočítáme průsečík
-                // TODO: průsečík uložíme - do seznamu průsečů
+        for (int i = 1; i < polygon.getSize(); i++) {
+            int pointY = polygon.getPoint(i).getY();
+            if (pointY<yMin){
+                yMin = pointY;
+            } else if (pointY>yMax) {
+                yMax = pointY;
             }
-
-            // Máme průsečíky
-            // TODO: Spojíme lichý se sudým
         }
 
-        // TODO: Obtáhneme polygon
+        for (int y = yMin; y <= yMax; y++) {
+            List<Integer> intersections = new ArrayList<>();
+            for (Edge edge : edges) {
+                if (!edge.isIntersection(y)) continue;
+                var x = edge.getIntersection(y);
+                 intersections.add(x);
+            }
+            Collections.sort(intersections);
+            for (int i = 0; i + 1 < intersections.size(); i += 2) {
+                int xStart = intersections.get(i);
+                int xEnd = intersections.get(i + 1);
+                for (int j = xStart; j<= xEnd; j++ ){
+                    raster.setPixel(j,y,fillColor);
+                }
+            }
+        }
 
+        polygonRasterizer.rasterize(polygon);
     }
 
     @Override

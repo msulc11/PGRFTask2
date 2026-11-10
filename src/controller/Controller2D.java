@@ -1,6 +1,7 @@
 package controller;
 
 import fill.Filler;
+import fill.ScanLineFill;
 import fill.SeedFill;
 import model.Edge;
 import model.Point2D;
@@ -26,6 +27,7 @@ public class Controller2D {
 
     // Fillers
     private SeedFill seedFiller;
+    private ScanLineFill scanLineFiller;
 
     private final Polygon polygon;
     private Point2D lineStart, lineEnd;
@@ -45,6 +47,9 @@ public class Controller2D {
 
         polygon = new Polygon();
 
+        scanLineFiller = new ScanLineFill(panel.getRaster(), polygonRasterizer);
+        scanLineFiller.setPolygon(polygon);
+
         initListeners();
 
         drawScene();
@@ -54,6 +59,13 @@ public class Controller2D {
         panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                // Ctrl + levé tlačítko: přidá bod polygonu (vyplní se scan-line)
+                if (e.getButton() == MouseEvent.BUTTON1 && e.isControlDown()) {
+                    polygon.addPoint(new Point2D(e.getX(), e.getY()));
+                    drawScene();
+                    return;
+                }
+
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     int startX = panel.getWidth() / 2;
                     int startY = panel.getHeight() / 2;
@@ -116,7 +128,8 @@ public class Controller2D {
         if (lineStart != null && lineEnd != null)
             lineRasterizer.rasterize(lineStart.getX(), lineStart.getY(), lineEnd.getX(), lineEnd.getY());
 
-        polygonRasterizer.rasterize(polygon);
+        // výplň polygonu i s obtažením hranice
+        scanLineFiller.fill();
 
         seedFiller.fill();
 

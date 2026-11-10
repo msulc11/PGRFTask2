@@ -43,8 +43,12 @@ public class Edge {
     }
 
     public int getIntersection(int y) {
-        // TODO: spočítáme průsečík
-        return 0;
+        int dx = x2 - x1;
+        int dy = y2 - y1;
+        float k = dx/ (float) dy;
+        int rows = y - y1;
+        float x = x1 + k* rows;
+        return Math.round(x);
     }
 
     public int getX1() {
