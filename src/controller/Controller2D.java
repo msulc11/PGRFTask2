@@ -1,5 +1,6 @@
 package controller;
 
+import clip.CohenSutherland;
 import fill.Filler;
 import fill.ScanLineFill;
 import fill.SeedFill;
@@ -29,6 +30,10 @@ public class Controller2D {
     private SeedFill seedFiller;
     private ScanLineFill scanLineFiller;
 
+    // Clipping
+    private CohenSutherland cohenSutherland;
+    private Polygon clipWindow;
+
     private final Polygon polygon;
     private Point2D lineStart, lineEnd;
 
@@ -50,6 +55,13 @@ public class Controller2D {
         scanLineFiller = new ScanLineFill(panel.getRaster(), polygonRasterizer);
         scanLineFiller.setPolygon(polygon);
 
+        cohenSutherland = new CohenSutherland(200, 150, 600, 450);
+        clipWindow = new Polygon();
+        clipWindow.addPoint(new Point2D(200, 150));
+        clipWindow.addPoint(new Point2D(600, 150));
+        clipWindow.addPoint(new Point2D(600, 450));
+        clipWindow.addPoint(new Point2D(200, 450));
+
         initListeners();
 
         drawScene();
@@ -59,7 +71,6 @@ public class Controller2D {
         panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                // Ctrl + levé tlačítko: přidá bod polygonu (vyplní se scan-line)
                 if (e.getButton() == MouseEvent.BUTTON1 && e.isControlDown()) {
                     polygon.addPoint(new Point2D(e.getX(), e.getY()));
                     drawScene();
@@ -125,10 +136,14 @@ public class Controller2D {
 
         lineRasterizer.rasterize(edge.getX1(), edge.getY1(), edge.getX2(), edge.getY2());
 
-        if (lineStart != null && lineEnd != null)
-            lineRasterizer.rasterize(lineStart.getX(), lineStart.getY(), lineEnd.getX(), lineEnd.getY());
+        polygonRasterizer.rasterize(clipWindow);
 
-        // výplň polygonu i s obtažením hranice
+        if (lineStart != null && lineEnd != null) {
+            double[] line = cohenSutherland.clip(lineStart.getX(), lineStart.getY(), lineEnd.getX(), lineEnd.getY());
+            if (line != null)
+                lineRasterizer.rasterize((int) line[0], (int) line[1], (int) line[2], (int) line[3]);
+        }
+
         scanLineFiller.fill();
 
         seedFiller.fill();

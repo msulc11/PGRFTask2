@@ -21,7 +21,6 @@ public class Edge {
         return y1 == y2;
     }
 
-
     public void orientate() {
         if (y1 > y2) {
             int tempX = x1;
@@ -34,9 +33,8 @@ public class Edge {
         }
     }
 
-
     public boolean isIntersection(int y) {
-        if (y >= y1 && y<=y2 - 1){
+        if (y >= y1 && y <= y2 - 1) {
             return true;
         }
         else return false;
@@ -45,9 +43,9 @@ public class Edge {
     public int getIntersection(int y) {
         int dx = x2 - x1;
         int dy = y2 - y1;
-        float k = dx/ (float) dy;
+        float k = dx / (float) dy;
         int rows = y - y1;
-        float x = x1 + k* rows;
+        float x = x1 + k * rows;
         return Math.round(x);
     }
 

@@ -43,9 +43,9 @@ public class ScanLineFill implements Filler {
         int yMax = yMin;
         for (int i = 1; i < polygon.getSize(); i++) {
             int pointY = polygon.getPoint(i).getY();
-            if (pointY<yMin){
+            if (pointY < yMin) {
                 yMin = pointY;
-            } else if (pointY>yMax) {
+            } else if (pointY > yMax) {
                 yMax = pointY;
             }
         }
@@ -54,15 +54,15 @@ public class ScanLineFill implements Filler {
             List<Integer> intersections = new ArrayList<>();
             for (Edge edge : edges) {
                 if (!edge.isIntersection(y)) continue;
-                var x = edge.getIntersection(y);
-                 intersections.add(x);
+                int x = edge.getIntersection(y);
+                intersections.add(x);
             }
             Collections.sort(intersections);
             for (int i = 0; i + 1 < intersections.size(); i += 2) {
                 int xStart = intersections.get(i);
                 int xEnd = intersections.get(i + 1);
-                for (int j = xStart; j<= xEnd; j++ ){
-                    raster.setPixel(j,y,fillColor);
+                for (int j = xStart; j <= xEnd; j++) {
+                    raster.setPixel(j, y, fillColor);
                 }
             }
         }
