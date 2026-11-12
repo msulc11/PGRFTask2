@@ -3,13 +3,6 @@ package model;
 public class Edge {
     private int x1, y1, x2, y2;
 
-    public Edge(int x1, int y1, int x2, int y2) {
-        this.x1 = x1;
-        this.y1 = y1;
-        this.x2 = x2;
-        this.y2 = y2;
-    }
-
     public Edge(Point2D a, Point2D b) {
         this.x1 = a.getX();
         this.y1 = a.getY();
@@ -47,6 +40,30 @@ public class Edge {
         int rows = y - y1;
         float x = x1 + k * rows;
         return Math.round(x);
+    }
+
+    // Poloha bodu vůči hraně: záporné = vpravo, jinak vlevo
+    public double sideDecide(Point2D point) {
+        // 1. spočítáme tečný vektor
+        int tx = x2 - x1;
+        int ty = y2 - y1;
+
+        // 2. spočítáme normálu
+        double nx = -ty;
+        double ny = tx;
+        double nL = Math.sqrt(nx * nx + ny * ny);
+        nx = nx / nL;
+        ny = ny / nL;
+
+        // 3. Spočítáme vektor k bodu P
+        double vx = point.getX() - x1;
+        double vy = point.getY() - y1;
+        double vL = Math.sqrt(vx * vx + vy * vy);
+        vx = vx / vL;
+        vy = vy / vL;
+
+        // 4. Skalární součin
+        return nx * vx + ny * vy;
     }
 
     public int getX1() {

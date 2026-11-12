@@ -21,4 +21,7 @@ public class Polygon {
     public int  getSize() {
         return points.size();
     }
+    public void pointsClear(){
+        points.clear();
+    }
 }

@@ -1,26 +1,24 @@
 package controller;
 
 import clip.CohenSutherland;
-import fill.Filler;
 import fill.ScanLineFill;
 import fill.SeedFill;
-import model.Edge;
 import model.Point2D;
 import model.Polygon;
 import rasterize.LineRasterizer;
 import rasterize.LineRasterizerGraphics;
-import rasterize.LineRasterizerTrivial;
 import rasterize.PolygonRasterizer;
 import view.Panel;
 
+import javax.swing.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 
 public class Controller2D {
     private final Panel panel;
-    private int x, y;
 
     // Rasterizers
     private LineRasterizer lineRasterizer;
@@ -36,8 +34,6 @@ public class Controller2D {
 
     private final Polygon polygon;
     private Point2D lineStart, lineEnd;
-
-    private Edge edge = new Edge(300, 400, 500, 200);
 
     public Controller2D(Panel panel) {
         this.panel = panel;
@@ -78,8 +74,8 @@ public class Controller2D {
                 }
 
                 if (e.getButton() == MouseEvent.BUTTON1) {
-                    int startX = panel.getWidth() / 2;
-                    int startY = panel.getHeight() / 2;
+                    int startX = e.getX();
+                    int startY = e.getY();
                     int endX = e.getX();
                     int endY = e.getY();
                     lineStart = new Point2D(startX, startY);
@@ -92,40 +88,28 @@ public class Controller2D {
                     seedFiller.setSeed(new Point2D(e.getX(), e.getY()));
                     drawScene();
                 }
+            }
+        });
+        panel.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                // při tažení se mění jen konec úsečky; s Ctrl se kreslí polygon, ne úsečka
+                if (!SwingUtilities.isLeftMouseButton(e) || e.isControlDown() || lineStart == null)
+                    return;
 
-                if (e.getButton() == MouseEvent.BUTTON3) {
-//                    Point2D point = new Point2D(e.getX(), e.getY());
-//                    polygon.addPoint(point);
-//                    drawScene();
-
-                    // 1. spočítáme tečný vektor
-                    int tx = edge.getX2() - edge.getX1();
-                    int ty = edge.getY2() - edge.getY1();
-
-                    // 2. spočítáme normálu
-                    double nx = -ty;
-                    double ny = tx;
-                    double nL = Math.sqrt(nx * nx + ny * ny);
-                    nx = nx / nL;
-                    ny = ny / nL;
-
-                    // 3. Spočítáme vektor k bodu P (kam jsem kliknul)
-                    double vx = e.getX() - edge.getX1();
-                    double vy = e.getY() - edge.getY1();
-                    double vL = Math.sqrt(vx * vx + vy * vy);
-                    vx = vx / vL;
-                    vy = vy / vL;
-
-                    // 4. Skalární součin
-                    double dot = nx * vx + ny * vy;
-                    System.out.println("dot: " + dot);
-
-                    // 5. Porovnat znamenáko výsledku skalárního součinu (úhel)
-                    // rozhodnout, jestli je vlevo nebo vpravo
-                    if(dot < 0)
-                        System.out.println("Vpravo");
-                    else
-                        System.out.println("Vlevo");
+                lineEnd = new Point2D(e.getX(), e.getY());
+                drawScene();
+            }
+        });
+        panel.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_C) {
+                    lineStart = null;
+                    lineEnd = null;
+                    polygon.pointsClear();
+                    seedFiller.seedClear();
+                    drawScene();
                 }
             }
         });
@@ -133,8 +117,6 @@ public class Controller2D {
 
     private void drawScene() {
         panel.getRaster().clear();
-
-        lineRasterizer.rasterize(edge.getX1(), edge.getY1(), edge.getX2(), edge.getY2());
 
         polygonRasterizer.rasterize(clipWindow);
 

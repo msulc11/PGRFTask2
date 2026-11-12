@@ -20,6 +20,9 @@ public class SeedFill implements Filler {
 
         fill(seed.getX(), seed.getY());
     }
+    public void seedClear(){
+        seed = null;
+    }
 
     // rekurze
     private void fill(int x, int y) {
