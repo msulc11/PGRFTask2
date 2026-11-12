@@ -3,19 +3,21 @@ package controller;
 import clip.CohenSutherland;
 import fill.ScanLineFill;
 import fill.SeedFill;
+import model.Line;
 import model.Point2D;
 import model.Polygon;
 import rasterize.LineRasterizer;
-import rasterize.LineRasterizerGraphics;
+import rasterize.LineRasterizerTrivial;
 import rasterize.PolygonRasterizer;
 import view.Panel;
-
 import javax.swing.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Controller2D {
     private final Panel panel;
@@ -33,14 +35,16 @@ public class Controller2D {
     private Polygon clipWindow;
 
     private final Polygon polygon;
+    private final List<Line> lines = new ArrayList<>();
     private Point2D lineStart, lineEnd;
+    private Point2D polygonPreview; // nový vrchol polygonu během tažení, potvrdí se uvolněním
+    private boolean polygonMode;
 
     public Controller2D(Panel panel) {
         this.panel = panel;
 
         // Rasterozers
-        lineRasterizer = new LineRasterizerGraphics(panel.getRaster());
-        //lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
+        lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
         polygonRasterizer = new PolygonRasterizer(lineRasterizer);
 
         // Fillers
@@ -67,8 +71,8 @@ public class Controller2D {
         panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if (e.getButton() == MouseEvent.BUTTON1 && e.isControlDown()) {
-                    polygon.addPoint(new Point2D(e.getX(), e.getY()));
+                if (e.getButton() == MouseEvent.BUTTON1 && polygonMode) {
+                    polygonPreview = new Point2D(e.getX(), e.getY());
                     drawScene();
                     return;
                 }
@@ -89,12 +93,45 @@ public class Controller2D {
                     drawScene();
                 }
             }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.getButton() != MouseEvent.BUTTON1)
+                    return;
+
+                if (polygonMode && polygonPreview != null) {
+                    polygon.addPoint(polygonPreview);
+                    polygonPreview = null;
+                    drawScene();
+                    return;
+                }
+
+                if (polygonMode || lineStart == null)
+                    return;
+
+                lines.add(new Line(lineStart, lineEnd));
+                lineStart = null;
+                lineEnd = null;
+                drawScene();
+            }
         });
         panel.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                // při tažení se mění jen konec úsečky; s Ctrl se kreslí polygon, ne úsečka
-                if (!SwingUtilities.isLeftMouseButton(e) || e.isControlDown() || lineStart == null)
+                if (!SwingUtilities.isLeftMouseButton(e))
+                    return;
+
+
+                if (polygonMode) {
+                    if (polygonPreview == null)
+                        return;
+                    polygonPreview = new Point2D(e.getX(), e.getY());
+                    drawScene();
+                    return;
+                }
+
+
+                if (lineStart == null)
                     return;
 
                 lineEnd = new Point2D(e.getX(), e.getY());
@@ -104,9 +141,15 @@ public class Controller2D {
         panel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_R) {
+                    polygonMode = !polygonMode;
+                    System.out.println("Režim polygonů: " + polygonMode);
+                }
                 if (e.getKeyCode() == KeyEvent.VK_C) {
+                    lines.clear();
                     lineStart = null;
                     lineEnd = null;
+                    polygonPreview = null;
                     polygon.pointsClear();
                     seedFiller.seedClear();
                     drawScene();
@@ -120,16 +163,29 @@ public class Controller2D {
 
         polygonRasterizer.rasterize(clipWindow);
 
-        if (lineStart != null && lineEnd != null) {
-            double[] line = cohenSutherland.clip(lineStart.getX(), lineStart.getY(), lineEnd.getX(), lineEnd.getY());
-            if (line != null)
-                lineRasterizer.rasterize((int) line[0], (int) line[1], (int) line[2], (int) line[3]);
-        }
+        for (Line line : lines)
+            drawClippedLine(line.getStart(), line.getEnd());
+
+        if (lineStart != null && lineEnd != null)
+            drawClippedLine(lineStart, lineEnd);
 
         scanLineFiller.fill();
+        polygonRasterizer.rasterize(polygon);
+        if (polygonPreview != null && polygon.getSize() > 0) {
+            Point2D first = polygon.getPoint(0);
+            Point2D last = polygon.getPoint(polygon.getSize() - 1);
+            lineRasterizer.rasterize(first.getX(), first.getY(), polygonPreview.getX(), polygonPreview.getY());
+            lineRasterizer.rasterize(last.getX(), last.getY(), polygonPreview.getX(), polygonPreview.getY());
+        }
 
         seedFiller.fill();
 
         panel.repaint();
+    }
+
+    private void drawClippedLine(Point2D start, Point2D end) {
+        double[] line = cohenSutherland.clip(start.getX(), start.getY(), end.getX(), end.getY());
+        if (line != null)
+            lineRasterizer.rasterize((int) line[0], (int) line[1], (int) line[2], (int) line[3]);
     }
 }
