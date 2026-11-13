@@ -54,6 +54,7 @@ public class Controller2D {
 
         scanLineFiller = new ScanLineFill(panel.getRaster(), polygonRasterizer);
         scanLineFiller.setPolygon(polygon);
+        scanLineFiller.setFillColor(0xffff00);
 
         cohenSutherland = new CohenSutherland(200, 150, 600, 450);
         clipWindow = new Polygon();
@@ -152,8 +153,15 @@ public class Controller2D {
                     polygonPreview = null;
                     polygon.pointsClear();
                     seedFiller.seedClear();
+                    seedFiller.setHranice(false);
                     drawScene();
                 }
+                if (e.getKeyCode() == KeyEvent.VK_B) {
+                seedFiller.setHranice((!seedFiller.isHranice()));
+                System.out.println("Seed fill omezení hranicí: " + seedFiller.isHranice());
+                drawScene();
+                }
+
             }
         });
     }
@@ -169,6 +177,8 @@ public class Controller2D {
         if (lineStart != null && lineEnd != null)
             drawClippedLine(lineStart, lineEnd);
 
+        // polygon jinou barvou než hranice (bílá), aby byl vidět rozdíl mezi omezením barvou hranice a pozadí
+        lineRasterizer.setColor(0xff8800);
         scanLineFiller.fill();
         polygonRasterizer.rasterize(polygon);
         if (polygonPreview != null && polygon.getSize() > 0) {
@@ -177,6 +187,7 @@ public class Controller2D {
             lineRasterizer.rasterize(first.getX(), first.getY(), polygonPreview.getX(), polygonPreview.getY());
             lineRasterizer.rasterize(last.getX(), last.getY(), polygonPreview.getX(), polygonPreview.getY());
         }
+        lineRasterizer.setColor(0xffffff);
 
         seedFiller.fill();
 

@@ -10,7 +10,8 @@ public class SeedFill implements Filler {
     private Raster raster;
     private final List<Point2D> seeds = new ArrayList<>();
 
-    private int backgroundColor, fillColor;
+    private int backgroundColor, fillColor, borderColor = 0xffffff;
+    private boolean hranice = false;
 
     public SeedFill(Raster raster) {
         this.raster = raster;
@@ -35,14 +36,18 @@ public class SeedFill implements Filler {
     private void fill(int x, int y) {
         // 1. načtu barvu pixelu na x, y
         int colorPixel = raster.getPixel(x, y);
+        if(hranice){
+            if (x < 0 || x >= raster.getWidth() || y < 0 || y >= raster.getHeight())
+                return;
+            int rgb = colorPixel & 0xffffff;
+            if (rgb == (borderColor & 0xffffff) || rgb == (fillColor & 0xffffff))
+                return;
+        }else{
+            if (colorPixel != backgroundColor){
+                return;
+            }
+        }
 
-        // 2. dostal jsem barvu a musím rozhodnout, jestli chci obarvit pixel
-        // rovná se barva barvě pozadí? pokud ano, obarvím, jinak nic nedělám
-        if(colorPixel != backgroundColor)
-            return;
-
-        // 3. pokud mám obarvit
-        // obarvím
         raster.setPixel(x, y, fillColor);
         // vše opakuji pro sousedy (rekurze)
         fill(x + 1, y);
@@ -59,4 +64,17 @@ public class SeedFill implements Filler {
     public void setFillColor(int fillColor) {
         this.fillColor = fillColor;
     }
+
+    public void setBorderColor(int borderColor) {
+        this.borderColor = borderColor;
+    }
+
+    public void setHranice(boolean hranice) {
+        this.hranice = hranice;
+    }
+
+    public boolean isHranice() {
+        return hranice;
+    }
 }
+
