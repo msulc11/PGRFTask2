@@ -89,7 +89,7 @@ public class Controller2D {
                 }
 
                 if (e.getButton() == MouseEvent.BUTTON2) {
-                    seedFiller.setSeed(new Point2D(e.getX(), e.getY()));
+                    seedFiller.addSeed(new Point2D(e.getX(), e.getY()));
                     drawScene();
                 }
             }

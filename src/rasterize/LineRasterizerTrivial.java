@@ -6,7 +6,6 @@ public class LineRasterizerTrivial extends LineRasterizer {
     public LineRasterizerTrivial(Raster raster) {
         super(raster);
     }
-
     @Override
     public void rasterize(int x1, int y1, int x2, int y2) {
  //nemohl jsem prijit jak udelat aby nebyly čáry tečkované -> AI poradila použít Math.abs
@@ -23,7 +22,7 @@ public class LineRasterizerTrivial extends LineRasterizer {
             for(int x = x1; x <= x2; x++) {
                 int y = Math.round(k * x + q);
                 // 3. obarvit pixel
-                raster.setPixel(x, y, 0xffffff);
+                raster.setPixel(x, y, color);
             }
         }
         else {
@@ -31,15 +30,14 @@ public class LineRasterizerTrivial extends LineRasterizer {
                 int temp = x1; x1 = x2; x2 = temp;
                 temp = y1; y1 = y2; y2 = temp;
             }
-            // 1. spočítat k a q
+            // 1. spočítat k
             float k = (x2 - x1) / (float) (y2 - y1);
-            float q = x1 - k * y1;
 
-            // 2. napsat for cyklus od x1 po x2
+            // 2. napsat for cyklus od y1 po y2
             for(int y = y1; y <= y2; y++) {
-                int x = Math.round(k * y + q);
+                int x = Math.round(x1 + k * (y - y1));
                 // 3. obarvit pixel
-                raster.setPixel(x, y, 0xffffff);
+                raster.setPixel(x, y, color);
             }
         }
 

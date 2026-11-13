@@ -3,9 +3,12 @@ package fill;
 import model.Point2D;
 import raster.Raster;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SeedFill implements Filler {
     private Raster raster;
-    private Point2D seed;
+    private final List<Point2D> seeds = new ArrayList<>();
 
     private int backgroundColor, fillColor;
 
@@ -16,12 +19,16 @@ public class SeedFill implements Filler {
 
     @Override
     public void fill() {
-        if(seed == null) return;
-
-        fill(seed.getX(), seed.getY());
+        for (Point2D seed : seeds) {
+            backgroundColor = raster.getPixel(seed.getX(), seed.getY());
+            if ((backgroundColor & 0xffffff) == (fillColor & 0xffffff))
+                continue;
+            fill(seed.getX(), seed.getY());
+        }
     }
+
     public void seedClear(){
-        seed = null;
+        seeds.clear();
     }
 
     // rekurze
@@ -44,13 +51,8 @@ public class SeedFill implements Filler {
         fill(x, y - 1);
     }
 
-    public void setSeed(Point2D seed) {
-        this.seed = seed;
-        setBackgroundColor(raster.getPixel(seed.getX(), seed.getY()));
-    }
-
-    public void setBackgroundColor(int backgroundColor) {
-        this.backgroundColor = backgroundColor;
+    public void addSeed(Point2D seed) {
+        seeds.add(seed);
     }
 
     @Override
